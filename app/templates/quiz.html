@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{.Title}}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .question {
+            margin-bottom: 20px;
+        }
+        .question-code {
+            background-color: #f4f4f4;
+            border: 1px solid #ddd;
+            padding: 5px;
+            overflow-x: auto;
+            font-family: monospace;
+        }
+        .question-text {
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .options {
+            margin-bottom: 10px;
+        }
+        .correct {
+            color: green;
+            font-weight: bold;
+        }
+        .incorrect {
+            color: red;
+            font-weight: bold;
+        }
+        button {
+            margin-top: 20px;
+        }
+    </style>
+    <script src="/static/js/quiz.js"></script>
+</head>
+<body>
+    <h1>{{.Title}}</h1>
+    <form id="quizForm">
+        <input type="hidden" name="quizId" value="{{.ID}}"/>
+        {{range $index, $question := .Questions}}
+        <div class="question">
+            <div class="question-text">
+                {{add $index 1}}. {{ $question.Text }}
+            </div>
+            {{if $question.Code}}
+            <div class="question-code">
+                <pre><code>{{ $question.Code }}</code></pre>
+            </div>
+            {{end}}
+            <div class="options">
+                {{if eq $question.Type "single"}}
+                    {{range $i, $option := $question.Options}}
+                    <label>
+                        <input type="radio" name="question-{{$question.ID}}" value="{{$i}}">
+                        {{ $option }}
+                    </label><br>
+                    {{end}}
+                {{else if eq $question.Type "multiple"}}
+                    {{range $i, $option := $question.Options}}
+                    <label>
+                        <input type="checkbox" name="question-{{$question.ID}}" value="{{$i}}">
+                        {{ $option }}
+                    </label><br>
+                    {{end}}
+                {{end}}
+            </div>
+        </div>
+        {{end}}
+        <button type="button" id="submitQuiz">Submit</button>
+        <button type="button" onclick="window.location.href='/'">Home</button>
+    </form>
+    <div id="results"></div>
+</body>
+</html>
