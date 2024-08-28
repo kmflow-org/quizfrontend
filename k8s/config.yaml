@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: quizfrontend
+  namespace: quizfrontend
+data:
+  config.yaml: |
+    quizListUrl: http://quizcrud.quizcrud:8081/quizzes
+    quizUrl: http://quizcrud.quizcrud:8081/quiz/
+    checkerServiceUrl: http://localhost:8082/check
