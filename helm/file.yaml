@@ -1,0 +1,144 @@
+---
+# Source: quizfrontend/templates/serviceaccount.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: quizfrontend
+  labels:
+    helm.sh/chart: quizfrontend-0.1.0
+    app.kubernetes.io/name: quizfrontend
+    app.kubernetes.io/instance: release-name
+    app.kubernetes.io/version: "1.16.0"
+    app.kubernetes.io/managed-by: Helm
+automountServiceAccountToken: true
+---
+# Source: quizfrontend/templates/config.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: quizfrontend
+data:
+  config.yaml: |
+    quizListUrl: http://quizcrud.quizcrud/quizzes
+    quizUrl: http://quizcrud.quizcrud/quiz/
+    checkerServiceUrl: http://quizchecker.quizchecker/check
+---
+# Source: quizfrontend/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: quizfrontend
+  labels:
+    helm.sh/chart: quizfrontend-0.1.0
+    app.kubernetes.io/name: quizfrontend
+    app.kubernetes.io/instance: release-name
+    app.kubernetes.io/version: "1.16.0"
+    app.kubernetes.io/managed-by: Helm
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-healthcheck-healthy-threshold: 2
+    service.beta.kubernetes.io/aws-load-balancer-healthcheck-interval: 10
+    service.beta.kubernetes.io/aws-load-balancer-healthcheck-path: /health
+    service.beta.kubernetes.io/aws-load-balancer-healthcheck-unhealthy-threshold: 2
+    service.beta.kubernetes.io/aws-load-balancer-internal: false
+    service.beta.kubernetes.io/aws-load-balancer-security-groups: sg-06eeec25a5f3bd2e4
+    service.beta.kubernetes.io/aws-load-balancer-ssl-cert: arn:aws:acm:us-west-2:533675705859:certificate/3273eef3-f49d-490e-89bd-4d7c997e34dd
+    service.beta.kubernetes.io/aws-load-balancer-ssl-negotiation-policy: ELBSecurityPolicy-TLS13-1-2-2021-06
+    service.beta.kubernetes.io/aws-load-balancer-ssl-ports: 443
+spec:
+  type: LoadBalancer
+  ports:
+    - port: 80
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    app.kubernetes.io/name: quizfrontend
+    app.kubernetes.io/instance: release-name
+---
+# Source: quizfrontend/templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: quizfrontend
+  labels:
+    helm.sh/chart: quizfrontend-0.1.0
+    app.kubernetes.io/name: quizfrontend
+    app.kubernetes.io/instance: release-name
+    app.kubernetes.io/version: "1.16.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: quizfrontend
+      app.kubernetes.io/instance: release-name
+  template:
+    metadata:
+      labels:
+        helm.sh/chart: quizfrontend-0.1.0
+        app.kubernetes.io/name: quizfrontend
+        app.kubernetes.io/instance: release-name
+        app.kubernetes.io/version: "1.16.0"
+        app.kubernetes.io/managed-by: Helm
+    spec:
+      serviceAccountName: quizfrontend
+      securityContext:
+        {}
+      containers:
+        - name: quizfrontend
+          securityContext:
+            {}
+          image: "533675705859.dkr.ecr.us-west-2.amazonaws.com/quizfrontend:v1"
+          imagePullPolicy: Always
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+          resources:
+            limits:
+              cpu: 100m
+              memory: 128Mi
+            requests:
+              cpu: 100m
+              memory: 128Mi
+          volumeMounts:
+            - mountPath: /app/config.yaml
+              name: config
+              subPath: config.yaml
+      volumes:
+        - configMap:
+            name: quizfrontend
+          name: config
+---
+# Source: quizfrontend/templates/hpa.yaml
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: quizfrontend
+  labels:
+    helm.sh/chart: quizfrontend-0.1.0
+    app.kubernetes.io/name: quizfrontend
+    app.kubernetes.io/instance: release-name
+    app.kubernetes.io/version: "1.16.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: quizfrontend
+  minReplicas: 1
+  maxReplicas: 5
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 30

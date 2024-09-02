@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "quizfrontend.fullname" . }}
+data:
+  config.yaml: |
+    quizListUrl: {{.Values.config.quizListUrl}}
+    quizUrl: {{.Values.config.quizUrl}}
+    checkerServiceUrl: {{.Values.config.checkerServiceUrl}}
