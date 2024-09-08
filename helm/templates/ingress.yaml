@@ -1,0 +1,23 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "quizfrontend.fullname" . }}
+  annotations:
+    kubernetes.io/ingress.class: alb
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTPS": 443}]'
+    alb.ingress.kubernetes.io/certificate-arn: {{.Values.ingress.cert_arn}}
+    alb.ingress.kubernetes.io/ssl-redirect: '443' # Automatically redirect HTTP to HTTPS
+    alb.ingress.kubernetes.io/target-type: ip # Can be 'ip' (for IP addresses) or 'instance' (for EC2 instances)
+spec:
+  rules:
+    - host: quizzes.kmflow.org # Your custom domain
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: quizfrontend
+                port:
+                  number: 80
