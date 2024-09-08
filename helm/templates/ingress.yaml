@@ -9,6 +9,7 @@ metadata:
     alb.ingress.kubernetes.io/listen-ports: '[{"HTTPS": 443}]'
     alb.ingress.kubernetes.io/certificate-arn: {{.Values.ingress.cert_arn}}
     alb.ingress.kubernetes.io/target-type: ip # Can be 'ip' (for IP addresses) or 'instance' (for EC2 instances)
+    alb.ingress.kubernetes.io/group.name: "quizzer-alb"
 spec:
   rules:
     - host: quizzes.kmflow.org # Your custom domain
