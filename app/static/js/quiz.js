@@ -5,10 +5,38 @@ document.addEventListener("DOMContentLoaded", function () {
         submitQuiz();
     });
 
+    function clearQuestionResults() {
+        document.querySelectorAll(".question").forEach((questionEl) => {
+            questionEl.classList.remove("is-correct", "is-incorrect");
+        });
+
+        document.querySelectorAll(".question-result").forEach((resultEl) => {
+            resultEl.classList.remove("visible", "correct", "incorrect");
+            resultEl.textContent = "";
+        });
+    }
+
+    function renderResultForQuestion(result) {
+        const questionId = String(result["questionId"]);
+        const isCorrect = Boolean(result["correct"]);
+
+        const resultEl = document.getElementById(`result-${questionId}`);
+        const questionCardEl = document.querySelector(`.question[data-question-id="${questionId}"]`);
+
+        if (!resultEl || !questionCardEl) {
+            return;
+        }
+
+        resultEl.classList.add("visible", isCorrect ? "correct" : "incorrect");
+        resultEl.textContent = isCorrect ? "Correct answer" : "Incorrect answer";
+
+        questionCardEl.classList.add(isCorrect ? "is-correct" : "is-incorrect");
+    }
+
     function submitQuiz() {
-        let form = document.getElementById('quizForm');
-        let formData = new FormData(form);
-        let quizData = {};
+        const form = document.getElementById('quizForm');
+        const formData = new FormData(form);
+        const quizData = {};
 
         formData.forEach(function(value, key) {
             if (!quizData[key]) {
@@ -18,7 +46,9 @@ document.addEventListener("DOMContentLoaded", function () {
         });
 
         // Convert the quizData object to JSON.
-        let jsonData = JSON.stringify(quizData);
+        const jsonData = JSON.stringify(quizData);
+
+        clearQuestionResults();
 
         // Make the AJAX request.
         fetch('/evaluate', {
@@ -28,12 +58,15 @@ document.addEventListener("DOMContentLoaded", function () {
             },
             body: jsonData
         })
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`Failed with status ${response.status}`);
+            }
+            return response.json();
+        })
         .then(data => {
-            let results = document.getElementById("results");
-            results.innerHTML="";
-            data.forEach((result)=>{
-                results.innerHTML+="<h3>Question: "+result["questionId"] + " correct: "+ result["correct"]+"</h3><br/>";
+            data.forEach((result) => {
+                renderResultForQuestion(result);
             });
         })
         .catch((error) => {

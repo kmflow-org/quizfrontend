@@ -5,77 +5,334 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{.Title}}</title>
     <style>
+        :root {
+            --bg-1: #f2f1eb;
+            --bg-2: #eaf0ee;
+            --card: #fffef9;
+            --line: #d7ddd8;
+            --ink: #1f2623;
+            --muted: #5b6862;
+            --accent: #0f766e;
+            --accent-strong: #115e59;
+            --ok: #1f9d55;
+            --bad: #d64545;
+            --radius-lg: 20px;
+            --radius-md: 14px;
+            --font-head: "Avenir Next", "Segoe UI", "Trebuchet MS", sans-serif;
+            --font-body: "Source Sans Pro", "Helvetica Neue", sans-serif;
+            --font-code: "IBM Plex Mono", "SFMono-Regular", Consolas, monospace;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
         body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
+            margin: 0;
+            color: var(--ink);
+            font-family: var(--font-body);
+            background:
+                radial-gradient(circle at 12% 8%, rgba(15, 118, 110, 0.16), transparent 30%),
+                radial-gradient(circle at 88% 0%, rgba(201, 149, 67, 0.16), transparent 35%),
+                linear-gradient(150deg, var(--bg-1), var(--bg-2));
+            min-height: 100vh;
         }
+
+        .page {
+            width: min(980px, 92vw);
+            margin: 30px auto 44px;
+            animation: pageIn 520ms ease-out;
+        }
+
+        .quiz-header {
+            padding: 26px 24px;
+            border: 1px solid var(--line);
+            border-radius: var(--radius-lg);
+            background: linear-gradient(145deg, rgba(255, 254, 249, 0.95), rgba(253, 255, 252, 0.92));
+            box-shadow: 0 16px 38px -24px rgba(9, 21, 18, 0.42);
+            margin-bottom: 18px;
+        }
+
+        .eyebrow {
+            margin: 0;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            color: var(--accent-strong);
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
+
+        h1 {
+            margin: 10px 0 8px;
+            font-family: var(--font-head);
+            font-size: clamp(1.5rem, 3.6vw, 2.5rem);
+            letter-spacing: -0.02em;
+            line-height: 1.15;
+        }
+
+        .subtitle {
+            margin: 0;
+            color: var(--muted);
+            max-width: 68ch;
+        }
+
+        #quizForm {
+            display: grid;
+            gap: 14px;
+        }
+
         .question {
-            margin-bottom: 20px;
+            background: var(--card);
+            border: 1px solid var(--line);
+            border-radius: var(--radius-lg);
+            padding: 18px 18px 16px;
+            box-shadow: 0 12px 24px -24px rgba(0, 0, 0, 0.5);
+            opacity: 0;
+            transform: translateY(10px);
+            animation: cardIn 420ms ease forwards;
         }
-        .question-code {
-            background-color: #f4f4f4;
-            border: 1px solid #ddd;
-            padding: 5px;
-            overflow-x: auto;
-            font-family: monospace;
+
+        .question.is-correct {
+            border-color: #8ac9a5;
+            box-shadow: 0 0 0 3px rgba(31, 157, 85, 0.18), 0 12px 24px -24px rgba(0, 0, 0, 0.5);
         }
+
+        .question.is-incorrect {
+            border-color: #e3a8a8;
+            box-shadow: 0 0 0 3px rgba(214, 69, 69, 0.16), 0 12px 24px -24px rgba(0, 0, 0, 0.5);
+        }
+
+        .question:nth-of-type(2) { animation-delay: 70ms; }
+        .question:nth-of-type(3) { animation-delay: 120ms; }
+        .question:nth-of-type(4) { animation-delay: 170ms; }
+        .question:nth-of-type(n+5) { animation-delay: 220ms; }
+
         .question-text {
-            font-weight: bold;
-            margin-bottom: 10px;
+            margin-bottom: 12px;
+            font-family: var(--font-head);
+            font-weight: 700;
+            font-size: 1.06rem;
+            line-height: 1.35;
         }
+
+        .question-code {
+            margin: 0 0 14px;
+            border: 1px solid #d5dbd7;
+            border-radius: var(--radius-md);
+            background: #f6f8f6;
+            overflow-x: auto;
+        }
+
+        .question-code pre {
+            margin: 0;
+            padding: 12px 14px;
+        }
+
+        .question-code code {
+            font-family: var(--font-code);
+            font-size: 0.9rem;
+        }
+
         .options {
-            margin-bottom: 10px;
+            display: grid;
+            gap: 8px;
         }
-        .correct {
-            color: green;
-            font-weight: bold;
+
+        .option {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 10px 10px;
+            border: 1px solid #dfe5e1;
+            border-radius: 12px;
+            background: #fcfdfb;
+            cursor: pointer;
+            transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
         }
-        .incorrect {
-            color: red;
-            font-weight: bold;
+
+        .option:hover {
+            border-color: #b8d4ce;
+            box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.12);
+            transform: translateY(-1px);
         }
+
+        .option input {
+            margin-top: 3px;
+            accent-color: var(--accent);
+        }
+
+        .actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 6px;
+        }
+
+        .question-result {
+            margin-top: 12px;
+            border: 1px solid #d6ddd8;
+            border-radius: 10px;
+            background: #f8fbf9;
+            padding: 8px 10px;
+            font-family: var(--font-head);
+            font-size: 0.92rem;
+            color: var(--muted);
+            display: none;
+        }
+
+        .question-result.visible {
+            display: block;
+        }
+
+        .question-result.correct {
+            border-color: #8ac9a5;
+            background: #eef9f2;
+            color: #1e5133;
+        }
+
+        .question-result.incorrect {
+            border-color: #e3a8a8;
+            background: #fff1f1;
+            color: #6f2a2a;
+        }
+
         button {
-            margin-top: 20px;
+            border: 0;
+            border-radius: 12px;
+            padding: 11px 18px;
+            font: 600 0.97rem var(--font-head);
+            cursor: pointer;
+        }
+
+        #submitQuiz {
+            color: #fff;
+            background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+            box-shadow: 0 12px 24px -18px rgba(17, 94, 89, 0.7);
+        }
+
+        #submitQuiz:hover {
+            filter: brightness(0.98);
+        }
+
+        .ghost {
+            color: var(--ink);
+            background: #eef3ef;
+            border: 1px solid #d2dbd6;
+        }
+
+        #results {
+            margin-top: 14px;
+            padding: 8px 2px;
+        }
+
+        #results h3 {
+            margin: 7px 0;
+            padding: 10px 12px;
+            font-size: 0.96rem;
+            border-radius: 10px;
+            border: 1px solid #d6ddd8;
+            background: #fbfcfa;
+            font-family: var(--font-head);
+        }
+
+        .correct {
+            color: var(--ok);
+            font-weight: 700;
+        }
+
+        .incorrect {
+            color: var(--bad);
+            font-weight: 700;
+        }
+
+        @keyframes pageIn {
+            from {
+                opacity: 0;
+                transform: translateY(12px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes cardIn {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @media (max-width: 680px) {
+            .page {
+                width: min(980px, 94vw);
+                margin: 20px auto 28px;
+            }
+
+            .quiz-header {
+                padding: 20px 16px;
+            }
+
+            .question {
+                padding: 16px 14px;
+            }
+
+            button {
+                width: 100%;
+                justify-content: center;
+            }
         }
     </style>
     <script src="/static/js/quiz.js"></script>
 </head>
 <body>
-    <h1>{{.Title}}</h1>
-    <form id="quizForm">
-        <input type="hidden" name="quizId" value="{{.ID}}"/>
-        {{range $index, $question := .Questions}}
-        <div class="question">
-            <div class="question-text">
-                {{add $index 1}}. {{ $question.Text }}
-            </div>
-            {{if $question.Code}}
-            <div class="question-code">
-                <pre><code>{{ $question.Code }}</code></pre>
-            </div>
-            {{end}}
-            <div class="options">
-                {{if eq $question.Type "single"}}
-                    {{range $i, $option := $question.Options}}
-                    <label>
-                        <input type="radio" name="question-{{$question.ID}}" value="{{$i}}">
-                        {{ $option }}
-                    </label><br>
-                    {{end}}
-                {{else if eq $question.Type "multiple"}}
-                    {{range $i, $option := $question.Options}}
-                    <label>
-                        <input type="checkbox" name="question-{{$question.ID}}" value="{{$i}}">
-                        {{ $option }}
-                    </label><br>
-                    {{end}}
+    <main class="page">
+        <header class="quiz-header">
+            <p class="eyebrow">Interactive Assessment</p>
+            <h1>{{.Title}}</h1>
+            <p class="subtitle">Answer each question and submit when ready. You can return to the quiz list at any time.</p>
+        </header>
+
+        <form id="quizForm">
+            <input type="hidden" name="quizId" value="{{.ID}}"/>
+            {{range $index, $question := .Questions}}
+            <section class="question" data-question-id="{{$question.ID}}">
+                <div class="question-text">
+                    {{add $index 1}}. {{ $question.Text }}
+                </div>
+                {{if $question.Code}}
+                <div class="question-code">
+                    <pre><code>{{ $question.Code }}</code></pre>
+                </div>
                 {{end}}
+                <div class="options">
+                    {{if eq $question.Type "single"}}
+                        {{range $i, $option := $question.Options}}
+                        <label class="option">
+                            <input type="radio" name="question-{{$question.ID}}" value="{{$i}}">
+                            <span>{{ $option }}</span>
+                        </label>
+                        {{end}}
+                    {{else if eq $question.Type "multiple"}}
+                        {{range $i, $option := $question.Options}}
+                        <label class="option">
+                            <input type="checkbox" name="question-{{$question.ID}}" value="{{$i}}">
+                            <span>{{ $option }}</span>
+                        </label>
+                        {{end}}
+                    {{end}}
+                </div>
+                <div class="question-result" id="result-{{$question.ID}}"></div>
+            </section>
+            {{end}}
+
+            <div class="actions">
+                <button type="button" id="submitQuiz">Submit Answers</button>
+                <button type="button" class="ghost" onclick="window.location.href='/'">Back Home</button>
             </div>
-        </div>
-        {{end}}
-        <button type="button" id="submitQuiz">Submit</button>
-        <button type="button" onclick="window.location.href='/'">Home</button>
-    </form>
-    <div id="results"></div>
+        </form>
+
+        <div id="results"></div>
+    </main>
 </body>
 </html>
