@@ -50,6 +50,20 @@ func add(a, b int) int {
 }
 
 func loadConfig() {
+
+	exePath, err := os.Executable()
+	if err != nil {
+		fmt.Printf("Failed to get executable path: %v\n", err)
+		os.Exit(1)
+	}
+
+	// Switch the working directory to the executable's directory
+	exeDir := filepath.Dir(exePath)
+	if err := os.Chdir(exeDir); err != nil {
+		fmt.Printf("Failed to change directory: %v\n", err)
+		os.Exit(1)
+	}
+
 	data, err := os.ReadFile("config.yaml")
 	if err != nil {
 		log.Fatalf("Failed to read config file: %v", err)
