@@ -123,7 +123,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 
 func healthCheckHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
-	fmt.Fprintln(w, "OK")
+	fmt.Fprintln(w, "OK All is well")
 }
 
 func toJson(v interface{}) (string, error) {
